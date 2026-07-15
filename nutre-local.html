@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nutre — seu objetivo, seu ritmo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Nunito+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   NUTRE — versão 100% local
+   Roda direto do arquivo (file://), sem servidor, sem instalação.
+   Todos os dados ficam salvos no localStorage do navegador de
+   quem abrir o arquivo (ver função SafeStorage no <script> abaixo).
+   ============================================================ */
+:root {
+    --creme: #FBF8F2;
+    --creme-cartao: #FFFFFF;
+    --verde: #5B8C6E;
+    --verde-escuro: #3E6B52;
+    --verde-suave: #E9F2EA;
+    --pessego: #F3A46B;
+    --pessego-suave: #FCE9DA;
+    --texto: #33352E;
+    --texto-suave: #8A8C82;
+    --borda: #EEEAE0;
+    --sombra: 0 8px 30px rgba(60, 60, 40, 0.07);
+    --raio: 20px;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: 'Nunito Sans', sans-serif;
+    background: var(--creme);
+    color: var(--texto);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+    position: relative;
+    overflow-x: hidden;
+}
+h1 { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 26px; margin: 0 0 4px; color: var(--verde-escuro); }
+.subtitulo { color: var(--texto-suave); font-size: 14px; margin: 0 0 26px; }
+.fundo-decorativo { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+.folha { position: absolute; fill: var(--verde-suave); opacity: 0.7; }
+.folha-1 { width: 260px; top: -60px; left: -80px; transform: rotate(20deg); }
+.folha-2 { width: 220px; bottom: -70px; right: -60px; transform: rotate(-30deg); fill: var(--pessego-suave); }
+.wrapper { width: 100%; max-width: 380px; }
+.marca { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; color: var(--verde-escuro); }
+.marca-icone { width: 26px; height: 26px; }
+.marca span { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: 0.5px; }
+.aviso-local {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--pessego-suave); color: #8A5A2E;
+    font-size: 11.5px; font-weight: 700;
+    padding: 9px 12px; border-radius: 12px; margin-bottom: 16px;
+}
+.aviso-local svg { width: 15px; height: 15px; flex-shrink: 0; }
+.tela { display: none; flex-direction: column; background: var(--creme-cartao); border-radius: var(--raio); box-shadow: var(--sombra); padding: 32px 28px; animation: entrar 0.35s ease; }
+.tela.ativa { display: flex; }
+@keyframes entrar { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.topo-tela { display: flex; justify-content: space-between; align-items: flex-start; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--texto-suave); margin-bottom: 14px; }
+input, select { font-family: inherit; font-size: 15px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--borda); background: var(--creme); color: var(--texto); outline: none; transition: border-color 0.2s; width: 100%; }
+input:focus, select:focus { border-color: var(--verde); }
+.linha-dupla { display: flex; gap: 12px; }
+.linha-dupla label { flex: 1; }
+.btn-principal { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 15px; background: var(--verde); color: white; border: none; padding: 14px; border-radius: 14px; cursor: pointer; margin-top: 4px; transition: background 0.2s, transform 0.1s; width: 100%; }
+.btn-principal:hover { background: var(--verde-escuro); }
+.btn-principal:active { transform: scale(0.98); }
+.btn-texto { background: none; border: none; color: var(--texto-suave); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 12px 0 0; width: 100%; }
+.btn-texto:hover { color: var(--verde-escuro); }
+.btn-icone { background: var(--verde-suave); border: none; width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--verde-escuro); cursor: pointer; }
+.btn-icone svg { width: 18px; height: 18px; }
+.btn-icone:hover { background: var(--pessego-suave); color: var(--pessego); }
+.troca { text-align: center; font-size: 13px; color: var(--texto-suave); margin-top: 18px; margin-bottom: 0; }
+.troca a { color: var(--verde); font-weight: 700; cursor: pointer; text-decoration: none; }
+.troca a:hover { text-decoration: underline; }
+.mensagem-erro { color: #C4634A; font-size: 13px; margin: -6px 0 10px; min-height: 16px; }
+.cartoes-objetivo { display: flex; flex-direction: column; gap: 10px; margin-bottom: 6px; }
+.cartao-objetivo { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--creme); border: 1.5px solid var(--borda); border-radius: 14px; cursor: pointer; font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 15px; color: var(--texto); text-align: left; transition: all 0.2s; width: 100%; }
+.cartao-objetivo svg { width: 22px; height: 22px; color: var(--verde); flex-shrink: 0; }
+.cartao-objetivo:hover { border-color: var(--verde); background: var(--verde-suave); }
+.resultado-selo { width: 52px; height: 52px; background: var(--verde-suave); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--verde); margin-bottom: 16px; }
+.resultado-selo svg { width: 24px; height: 24px; }
+.resultado-numero { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 44px; color: var(--pessego); margin: 4px 0 0; line-height: 1; }
+.resultado-legenda { color: var(--texto-suave); font-size: 13px; margin: 4px 0 26px; }
+.lista-historico { list-style: none; padding: 0; margin: 0 0 10px; display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+.lista-historico li { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--creme); border-radius: 12px; font-size: 13px; }
+.lista-historico .item-objetivo { font-weight: 700; color: var(--verde-escuro); }
+.lista-historico .item-data { color: var(--texto-suave); font-size: 11px; }
+.lista-historico .item-kcal { font-weight: 700; color: var(--pessego); }
+.vazio { color: var(--texto-suave); font-size: 13px; text-align: center; padding: 20px 0; }
+.grade-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.cartao-menu { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 16px 14px; background: var(--creme); border: 1.5px solid var(--borda); border-radius: 14px; cursor: pointer; font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 13.5px; color: var(--texto); text-align: left; transition: all 0.2s; }
+.cartao-menu svg { width: 22px; height: 22px; color: var(--verde); }
+.cartao-menu:hover { border-color: var(--verde); background: var(--verde-suave); }
+.lista-dietas { display: flex; flex-direction: column; gap: 10px; max-height: 460px; overflow-y: auto; }
+.cartao-dieta { border: 1.5px solid var(--borda); border-radius: 14px; overflow: hidden; }
+.cartao-dieta-cabecalho { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--creme); border: none; cursor: pointer; text-align: left; }
+.cartao-dieta-titulo { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 14.5px; color: var(--verde-escuro); }
+.cartao-dieta-perfil { font-size: 12px; color: var(--texto-suave); margin-top: 2px; }
+.cartao-dieta-cabecalho .seta { width: 18px; height: 18px; color: var(--texto-suave); transition: transform 0.2s; flex-shrink: 0; }
+.cartao-dieta.aberto .seta { transform: rotate(180deg); }
+.cartao-dieta-corpo { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; padding: 0 16px; }
+.cartao-dieta.aberto .cartao-dieta-corpo { max-height: 600px; padding: 4px 16px 16px; }
+.cartao-dieta-corpo p { font-size: 13px; color: var(--texto); line-height: 1.5; margin: 0 0 10px; }
+.tags-macro { display: flex; gap: 6px; margin-bottom: 12px; }
+.tag-macro { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 20px; }
+.tag-prot { background: var(--verde-suave); color: var(--verde-escuro); }
+.tag-carbo { background: var(--pessego-suave); color: #B5713A; }
+.tag-gordura { background: #F0E7D8; color: #8A7040; }
+.refeicao-item { font-size: 12.5px; padding: 8px 0; border-top: 1px solid var(--borda); color: var(--texto); }
+.refeicao-item strong { color: var(--verde-escuro); }
+#alimentos-busca { margin-bottom: 12px; }
+.chips-categoria { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 4px; }
+.chip { flex-shrink: 0; font-family: inherit; font-size: 12px; font-weight: 700; padding: 7px 13px; border-radius: 20px; border: 1.5px solid var(--borda); background: var(--creme); color: var(--texto-suave); cursor: pointer; }
+.chip.ativo { background: var(--verde); border-color: var(--verde); color: white; }
+.lista-alimentos { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; }
+.cartao-alimento { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--creme); border-radius: 12px; }
+.cartao-alimento-nome { font-weight: 700; font-size: 13.5px; color: var(--texto); }
+.cartao-alimento-macros { font-size: 11.5px; color: var(--texto-suave); margin-top: 3px; }
+.btn-adicionar { width: 30px; height: 30px; border-radius: 10px; border: none; background: var(--verde); color: white; font-size: 18px; line-height: 1; cursor: pointer; flex-shrink: 0; }
+.btn-adicionar:hover { background: var(--verde-escuro); }
+.barra-totais { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: var(--verde-suave); border-radius: 14px; padding: 14px 8px; margin-bottom: 16px; }
+.barra-totais div { display: flex; flex-direction: column; align-items: center; }
+.barra-totais span { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 17px; color: var(--verde-escuro); }
+.barra-totais small { font-size: 10px; color: var(--texto-suave); margin-top: 2px; }
+.btn-remover { width: 22px; height: 22px; border-radius: 50%; border: none; background: var(--pessego-suave); color: var(--pessego); font-size: 14px; line-height: 1; cursor: pointer; }
+.btn-remover:hover { background: #C4634A; color: white; }
+.bloco-online { margin-top: 14px; border-top: 1.5px dashed var(--borda); padding-top: 14px; }
+.btn-secundario {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 13px;
+    background: var(--creme); color: var(--verde-escuro); border: 1.5px dashed var(--verde);
+    padding: 12px; border-radius: 12px; cursor: pointer;
+}
+.btn-secundario svg { width: 16px; height: 16px; }
+.btn-secundario:hover { background: var(--verde-suave); }
+.btn-secundario:disabled { opacity: 0.6; cursor: default; }
+.status-online { font-size: 12px; color: var(--texto-suave); text-align: center; margin: 10px 0 0; min-height: 14px; }
+.cartao-alimento-fonte { font-size: 10px; color: var(--pessego); font-weight: 700; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+@media (max-width: 420px) { .tela { padding: 26px 20px; } }
+</style>
+</head>
+<body>
+
+<div class="fundo-decorativo">
+    <svg class="folha folha-1" viewBox="0 0 100 100"><path d="M50 5 C20 20, 10 50, 50 95 C90 50, 80 20, 50 5 Z"/></svg>
+    <svg class="folha folha-2" viewBox="0 0 100 100"><path d="M50 5 C20 20, 10 50, 50 95 C90 50, 80 20, 50 5 Z"/></svg>
+</div>
+
+<main class="wrapper">
+
+    <header class="marca">
+        <svg class="marca-icone" viewBox="0 0 48 48" fill="none"><path d="M24 44c11-6 18-15 18-25a13 13 0 0 0-13-13c-2.6 0-5 .9-7 2.4A11.9 11.9 0 0 0 15 6 13 13 0 0 0 2 19c0 10 11 19 22 25Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 44V19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <span>nutre</span>
+    </header>
+
+    <div class="aviso-local">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Versão local — seus dados ficam salvos só neste navegador.</span>
+    </div>
+
+    <!-- LOGIN -->
+    <section id="tela-login" class="tela ativa">
+        <h1>Bem-vinda de volta</h1>
+        <p class="subtitulo">Continue de onde parou, no seu ritmo.</p>
+        <label>Email<input type="email" id="login-email" placeholder="voce@email.com"></label>
+        <label>Senha<input type="password" id="login-senha" placeholder="••••••••"></label>
+        <p class="mensagem-erro" id="login-erro"></p>
+        <button class="btn-principal" onclick="fazerLogin()">Entrar</button>
+        <p class="troca">Ainda não tem conta? <a onclick="trocarTela('tela-cadastro')">Criar conta</a></p>
+    </section>
+
+    <!-- CADASTRO -->
+    <section id="tela-cadastro" class="tela">
+        <h1>Vamos começar</h1>
+        <p class="subtitulo">Leva menos de um minuto.</p>
+        <label>Nome<input type="text" id="cad-nome" placeholder="Como podemos te chamar?"></label>
+        <label>Email<input type="email" id="cad-email" placeholder="voce@email.com"></label>
+        <label>Senha<input type="password" id="cad-senha" placeholder="Mínimo 6 caracteres"></label>
+        <p class="mensagem-erro" id="cadastro-erro"></p>
+        <button class="btn-principal" onclick="fazerCadastro()">Criar conta</button>
+        <p class="troca">Já tem conta? <a onclick="trocarTela('tela-login')">Entrar</a></p>
+    </section>
+
+    <!-- MENU -->
+    <section id="tela-menu" class="tela">
+        <h1>Oi, <span id="menu-nome">👋</span></h1>
+        <p class="subtitulo">O que você quer fazer agora?</p>
+        <div class="grade-menu">
+            <button class="cartao-menu" onclick="trocarTela('tela-dados')">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M9 3v18M15 3v18M4 8h16M4 16h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span>Calcular minha meta</span>
+            </button>
+            <button class="cartao-menu" onclick="abrirDietas()">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v6M8 8h8l2 12H6L8 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                <span>Modelos de dieta</span>
+            </button>
+            <button class="cartao-menu" onclick="abrirAlimentos()">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span>Alimentos e macros</span>
+            </button>
+            <button class="cartao-menu" onclick="abrirDiario()">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span>Meu prato hoje</span>
+            </button>
+            <button class="cartao-menu" onclick="carregarHistorico()">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Histórico</span>
+            </button>
+            <button class="cartao-menu" onclick="fazerLogout()">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Sair</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- DIETAS -->
+    <section id="tela-dietas" class="tela">
+        <div class="topo-tela">
+            <h1>Modelos de dieta</h1>
+            <button class="btn-icone" onclick="trocarTela('tela-menu')"><svg viewBox="0 0 24 24" fill="none"><path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <p class="subtitulo">Visão geral — não substitui acompanhamento de um nutricionista.</p>
+        <div id="lista-dietas" class="lista-dietas"></div>
+    </section>
+
+    <!-- ALIMENTOS -->
+    <section id="tela-alimentos" class="tela">
+        <div class="topo-tela">
+            <h1>Alimentos e macros</h1>
+            <button class="btn-icone" onclick="trocarTela('tela-menu')"><svg viewBox="0 0 24 24" fill="none"><path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <input type="text" id="alimentos-busca" placeholder="Buscar alimento..." oninput="buscarAlimentos()">
+        <div class="chips-categoria" id="chips-categoria">
+            <button class="chip ativo" data-cat="" onclick="filtrarCategoria('')">Todos</button>
+            <button class="chip" data-cat="proteina" onclick="filtrarCategoria('proteina')">Proteínas</button>
+            <button class="chip" data-cat="carboidrato" onclick="filtrarCategoria('carboidrato')">Carboidratos</button>
+            <button class="chip" data-cat="gordura" onclick="filtrarCategoria('gordura')">Gorduras</button>
+            <button class="chip" data-cat="fruta" onclick="filtrarCategoria('fruta')">Frutas</button>
+            <button class="chip" data-cat="vegetal" onclick="filtrarCategoria('vegetal')">Vegetais</button>
+            <button class="chip" data-cat="laticinio" onclick="filtrarCategoria('laticinio')">Laticínios</button>
+        </div>
+        <div id="lista-alimentos" class="lista-alimentos"></div>
+
+        <div class="bloco-online">
+            <button class="btn-secundario" id="btn-buscar-online" onclick="buscarOnline()">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                Buscar mais alimentos online (Open Food Facts)
+            </button>
+            <p class="status-online" id="status-online"></p>
+            <div id="lista-online" class="lista-alimentos"></div>
+        </div>
+    </section>
+
+    <!-- MEU PRATO -->
+    <section id="tela-diario" class="tela">
+        <div class="topo-tela">
+            <h1>Meu prato hoje</h1>
+            <button class="btn-icone" onclick="trocarTela('tela-menu')"><svg viewBox="0 0 24 24" fill="none"><path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="barra-totais" id="barra-totais">
+            <div><span id="total-kcal">0</span><small>kcal</small></div>
+            <div><span id="total-prot">0g</span><small>proteína</small></div>
+            <div><span id="total-carbo">0g</span><small>carbo</small></div>
+            <div><span id="total-gordura">0g</span><small>gordura</small></div>
+        </div>
+        <ul class="lista-historico" id="diario-lista"></ul>
+        <p class="vazio" id="diario-vazio" style="display:none">Ainda não adicionou nada hoje. Vai em "Alimentos e macros" pra montar seu prato.</p>
+        <button class="btn-principal" onclick="abrirAlimentos()">+ Adicionar alimento</button>
+    </section>
+
+    <!-- DADOS -->
+    <section id="tela-dados" class="tela">
+        <div class="topo-tela">
+            <h1>Seus dados de hoje</h1>
+            <button class="btn-icone" title="Menu" onclick="trocarTela('tela-menu')"><svg viewBox="0 0 24 24" fill="none"><path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <p class="subtitulo">Usamos isso só pra calcular sua meta calórica.</p>
+        <label>Sexo
+            <select id="dados-sexo">
+                <option value="feminino">Feminino</option>
+                <option value="masculino">Masculino</option>
+            </select>
+        </label>
+        <div class="linha-dupla">
+            <label>Idade<input type="number" id="dados-idade" placeholder="anos"></label>
+            <label>Altura<input type="number" id="dados-altura" placeholder="cm"></label>
+        </div>
+        <label>Peso<input type="number" id="dados-peso" placeholder="kg" step="0.1"></label>
+        <p class="mensagem-erro" id="dados-erro"></p>
+        <button class="btn-principal" onclick="irParaObjetivo()">Continuar</button>
+    </section>
+
+    <!-- OBJETIVO -->
+    <section id="tela-objetivo" class="tela">
+        <h1>Qual seu objetivo?</h1>
+        <p class="subtitulo">Escolha o que faz sentido pra sua fase agora.</p>
+        <div class="cartoes-objetivo">
+            <button class="cartao-objetivo" onclick="calcular('Emagrecimento')">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3c2 4-3 5-3 9a3 3 0 0 0 6 0c0-1-.5-2-1-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Emagrecimento</span>
+            </button>
+            <button class="cartao-objetivo" onclick="calcular('Ganho de Massa')">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M6 12h.01M18 12h.01M4 16c2-6 4-9 8-9s6 3 8 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Ganho de massa</span>
+            </button>
+            <button class="cartao-objetivo" onclick="calcular('Manutenção')">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v4l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span>Manutenção</span>
+            </button>
+        </div>
+        <button class="btn-texto" onclick="trocarTela('tela-dados')">Voltar</button>
+    </section>
+
+    <!-- RESULTADO -->
+    <section id="tela-resultado" class="tela">
+        <div class="resultado-selo"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h1>Sua meta diária</h1>
+        <p class="resultado-numero" id="resultado-numero">—</p>
+        <p class="resultado-legenda" id="resultado-legenda">kcal por dia</p>
+        <button class="btn-principal" onclick="trocarTela('tela-dados')">Novo cálculo</button>
+        <button class="btn-texto" onclick="trocarTela('tela-menu')">Voltar ao menu</button>
+    </section>
+
+    <!-- HISTÓRICO -->
+    <section id="tela-historico" class="tela">
+        <div class="topo-tela">
+            <h1>Seu histórico</h1>
+            <button class="btn-icone" title="Menu" onclick="trocarTela('tela-menu')"><svg viewBox="0 0 24 24" fill="none"><path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <ul class="lista-historico" id="historico-lista"></ul>
+        <p class="vazio" id="historico-vazio" style="display:none">Ainda não tem nenhum cálculo salvo.</p>
+        <button class="btn-principal" onclick="trocarTela('tela-dados')">Voltar</button>
+    </section>
+
+</main>
+
+<script>
+/* ============================================================
+   SafeStorage — same pattern used in your other local projects.
+   Wraps localStorage with an in-memory fallback for when the
+   browser blocks storage on file:// (this happens on Safari).
+   ============================================================ */
+const SafeStorage = (function () {
+    let memoria = {};
+    let disponivel = true;
+    try {
+        localStorage.setItem("__teste__", "1");
+        localStorage.removeItem("__teste__");
+    } catch (e) {
+        disponivel = false;
+        console.warn("localStorage indisponível, usando memória temporária (dados não persistem entre sessões).");
+    }
+    return {
+        get(chave) {
+            if (disponivel) { try { return localStorage.getItem(chave); } catch (e) {} }
+            return memoria[chave] ?? null;
+        },
+        set(chave, valor) {
+            if (disponivel) { try { localStorage.setItem(chave, valor); return; } catch (e) {} }
+            memoria[chave] = valor;
+        }
+    };
+})();
+
+function lerJSON(chave, padrao) {
+    const bruto = SafeStorage.get(chave);
+    return bruto ? JSON.parse(bruto) : padrao;
+}
+function salvarJSON(chave, valor) {
+    SafeStorage.set(chave, JSON.stringify(valor));
+}
+function novoId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// Hashes the password with SHA-256 (built into every modern browser via
+// SubtleCrypto) so we don't store it in plain text - even though this is
+// local-only, it's good practice to never store raw passwords anywhere.
+async function gerarHash(texto) {
+    const bytes = new TextEncoder().encode(texto);
+    const buffer = await crypto.subtle.digest("SHA-256", bytes);
+    return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/* ============================================================
+   Food database & diet models — same content as the server
+   version, now living directly in the browser as constants.
+   ============================================================ */
+const ALIMENTOS = [
+    {id:1, nome:"Arroz branco cozido", categoria:"carboidrato", kcal:128, proteina:2.5, carbo:28.1, gordura:0.2, porcao:100},
+    {id:2, nome:"Feijão carioca cozido", categoria:"carboidrato", kcal:76, proteina:4.8, carbo:13.6, gordura:0.5, porcao:100},
+    {id:3, nome:"Batata doce cozida", categoria:"carboidrato", kcal:86, proteina:1.6, carbo:20.1, gordura:0.1, porcao:100},
+    {id:4, nome:"Aveia em flocos", categoria:"carboidrato", kcal:389, proteina:16.9, carbo:66.3, gordura:6.9, porcao:40},
+    {id:5, nome:"Pão integral", categoria:"carboidrato", kcal:247, proteina:13.0, carbo:41.0, gordura:4.2, porcao:50},
+    {id:6, nome:"Tapioca (goma hidratada)", categoria:"carboidrato", kcal:240, proteina:0.2, carbo:59.0, gordura:0.0, porcao:50},
+    {id:7, nome:"Quinoa cozida", categoria:"carboidrato", kcal:120, proteina:4.4, carbo:21.3, gordura:1.9, porcao:100},
+    {id:8, nome:"Lentilha cozida", categoria:"carboidrato", kcal:116, proteina:9.0, carbo:20.1, gordura:0.4, porcao:100},
+    {id:9, nome:"Peito de frango grelhado", categoria:"proteina", kcal:165, proteina:31.0, carbo:0.0, gordura:3.6, porcao:120},
+    {id:10, nome:"Ovo cozido", categoria:"proteina", kcal:155, proteina:13.0, carbo:1.1, gordura:11.0, porcao:50},
+    {id:11, nome:"Salmão grelhado", categoria:"proteina", kcal:208, proteina:20.0, carbo:0.0, gordura:13.0, porcao:120},
+    {id:12, nome:"Carne bovina magra grelhada", categoria:"proteina", kcal:219, proteina:27.0, carbo:0.0, gordura:11.0, porcao:120},
+    {id:13, nome:"Atum em água (lata)", categoria:"proteina", kcal:116, proteina:26.0, carbo:0.0, gordura:1.0, porcao:100},
+    {id:14, nome:"Queijo cottage", categoria:"proteina", kcal:98, proteina:11.0, carbo:3.4, gordura:4.3, porcao:100},
+    {id:15, nome:"Iogurte natural desnatado", categoria:"proteina", kcal:56, proteina:5.7, carbo:7.7, gordura:0.2, porcao:170},
+    {id:16, nome:"Whey protein (pó)", categoria:"proteina", kcal:400, proteina:80.0, carbo:8.0, gordura:5.0, porcao:30},
+    {id:17, nome:"Azeite de oliva extra virgem", categoria:"gordura", kcal:884, proteina:0.0, carbo:0.0, gordura:100.0, porcao:10},
+    {id:18, nome:"Abacate", categoria:"gordura", kcal:160, proteina:2.0, carbo:8.5, gordura:14.7, porcao:100},
+    {id:19, nome:"Amêndoas", categoria:"gordura", kcal:579, proteina:21.0, carbo:22.0, gordura:50.0, porcao:30},
+    {id:20, nome:"Amendoim", categoria:"gordura", kcal:567, proteina:26.0, carbo:16.0, gordura:49.0, porcao:30},
+    {id:21, nome:"Banana", categoria:"fruta", kcal:89, proteina:1.1, carbo:22.8, gordura:0.3, porcao:100},
+    {id:22, nome:"Maçã", categoria:"fruta", kcal:52, proteina:0.3, carbo:13.8, gordura:0.2, porcao:130},
+    {id:23, nome:"Brócolis cozido", categoria:"vegetal", kcal:35, proteina:2.4, carbo:7.2, gordura:0.4, porcao:100},
+    {id:24, nome:"Espinafre cru", categoria:"vegetal", kcal:23, proteina:2.9, carbo:3.6, gordura:0.4, porcao:50},
+    {id:25, nome:"Leite desnatado", categoria:"laticinio", kcal:34, proteina:3.4, carbo:5.0, gordura:0.1, porcao:200},
+];
+
+const DIETAS = [
+    { nome:"Low Carb", descricao:"Reduz carboidratos e prioriza proteínas e gorduras boas. Foco em vegetais, carnes, ovos e gorduras naturais, evitando açúcar e farinhas refinadas.", perfil:"Rica em proteína, pobre em carboidrato", prot:35, carbo:25, gordura:40,
+      cardapio:[["Café da manhã","Ovos mexidos com espinafre + café sem açúcar"],["Almoço","Peito de frango grelhado + brócolis + abacate"],["Jantar","Salmão grelhado + salada verde com azeite"]] },
+    { nome:"Cetogênica", descricao:"Restrição bem agressiva de carboidrato pra levar o corpo a usar gordura como principal fonte de energia (cetose). Costuma exigir acompanhamento profissional.", perfil:"Muito pobre em carboidrato, rica em gordura", prot:20, carbo:5, gordura:75,
+      cardapio:[["Café da manhã","Ovos com abacate e um fio de azeite"],["Almoço","Carne bovina grelhada + vegetais verdes refogados na manteiga"],["Jantar","Salmão + salada com azeite e amêndoas"]] },
+    { nome:"Mediterrânea", descricao:"Inspirada na alimentação tradicional do Mediterrâneo: azeite, peixes, grãos integrais, vegetais e pouca carne vermelha. Considerada uma das mais equilibradas e sustentáveis a longo prazo.", perfil:"Equilibrada, rica em gorduras boas", prot:20, carbo:45, gordura:35,
+      cardapio:[["Café da manhã","Iogurte natural com amêndoas e maçã picada"],["Almoço","Quinoa + salmão grelhado + brócolis com azeite"],["Jantar","Lentilha cozida + salada de folhas com azeite"]] },
+    { nome:"Dieta Flexível (IIFYM)", descricao:"'If It Fits Your Macros' - não restringe grupos de alimentos, só bate a meta diária de proteína, carboidrato e gordura. Flexível pro dia a dia.", perfil:"Configurável conforme objetivo", prot:40, carbo:35, gordura:25,
+      cardapio:[["Café da manhã","Aveia com banana e whey protein"],["Almoço","Arroz + feijão + peito de frango grelhado"],["Jantar","Batata doce + atum + salada"]] },
+    { nome:"Jejum Intermitente 16/8", descricao:"Não é sobre o que comer, e sim quando: janela de 8h pra se alimentar e 16h em jejum. Pode ser combinada com qualquer um dos perfis de macro acima.", perfil:"Depende da dieta combinada", prot:null, carbo:null, gordura:null,
+      cardapio:[["Primeira refeição (ex: 12h)","Ovos + abacate + pão integral"],["Segunda refeição (ex: 16h)","Whey protein + banana"],["Última refeição (ex: 20h)","Frango grelhado + arroz + brócolis"]] },
+];
+
+/* ============================================================
+   Auth — everything scoped to this browser's localStorage.
+   ============================================================ */
+function trocarTela(id) {
+    document.querySelectorAll(".tela").forEach(t => t.classList.remove("ativa"));
+    document.getElementById(id).classList.add("ativa");
+}
+
+function usuarioAtual() {
+    const id = SafeStorage.get("nutre.sessaoUsuarioId");
+    if (!id) return null;
+    const usuarios = lerJSON("nutre.usuarios", []);
+    return usuarios.find(u => u.id === id) || null;
+}
+
+function mostrarMenu(usuario) {
+    document.getElementById("menu-nome").textContent = usuario.nome.split(" ")[0];
+    trocarTela("tela-menu");
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    migrarDiarioAntigo();
+    const usuario = usuarioAtual();
+    if (usuario) mostrarMenu(usuario);
+    else trocarTela("tela-login");
+});
+
+// If someone used the previous version of this file, their diary entries
+// were saved as {alimentoId, quantidadeG} under a different storage key.
+// This converts them once into the new snapshot format so nothing is lost.
+function migrarDiarioAntigo() {
+    const antigos = lerJSON("nutre.diario", null);
+    if (!antigos || antigos.length === 0) return;
+
+    const novos = lerJSON("nutre.diario.v2", []);
+    antigos.forEach(item => {
+        const alimento = ALIMENTOS.find(a => a.id === item.alimentoId);
+        if (!alimento) return;
+        novos.push({
+            id: item.id, usuarioId: item.usuarioId, data: item.data, quantidadeG: item.quantidadeG,
+            nome: alimento.nome, fonte: "base própria",
+            kcal100g: alimento.kcal, proteina100g: alimento.proteina,
+            carbo100g: alimento.carbo, gordura100g: alimento.gordura
+        });
+    });
+    salvarJSON("nutre.diario.v2", novos);
+    SafeStorage.set("nutre.diario", ""); // clear the old key so this only runs once
+}
+
+async function fazerCadastro() {
+    const nome = document.getElementById("cad-nome").value.trim();
+    const email = document.getElementById("cad-email").value.trim().toLowerCase();
+    const senha = document.getElementById("cad-senha").value;
+    const erro = document.getElementById("cadastro-erro");
+    erro.textContent = "";
+
+    if (!nome || !email || senha.length < 6) {
+        erro.textContent = "Preencha nome, email e uma senha com 6+ caracteres.";
+        return;
+    }
+
+    const usuarios = lerJSON("nutre.usuarios", []);
+    if (usuarios.find(u => u.email === email)) {
+        erro.textContent = "Já existe uma conta com esse email neste navegador.";
+        return;
+    }
+
+    const senhaHash = await gerarHash(senha);
+    usuarios.push({ id: novoId(), nome, email, senhaHash });
+    salvarJSON("nutre.usuarios", usuarios);
+
+    document.getElementById("login-email").value = email;
+    trocarTela("tela-login");
+}
+
+async function fazerLogin() {
+    const email = document.getElementById("login-email").value.trim().toLowerCase();
+    const senha = document.getElementById("login-senha").value;
+    const erro = document.getElementById("login-erro");
+    erro.textContent = "";
+
+    const usuarios = lerJSON("nutre.usuarios", []);
+    const usuario = usuarios.find(u => u.email === email);
+    if (!usuario) { erro.textContent = "Email ou senha incorretos."; return; }
+
+    const senhaHash = await gerarHash(senha);
+    if (senhaHash !== usuario.senhaHash) { erro.textContent = "Email ou senha incorretos."; return; }
+
+    SafeStorage.set("nutre.sessaoUsuarioId", usuario.id);
+    mostrarMenu(usuario);
+}
+
+function fazerLogout() {
+    SafeStorage.set("nutre.sessaoUsuarioId", "");
+    trocarTela("tela-login");
+}
+
+/* ============================================================
+   Calculator flow
+   ============================================================ */
+let dadosUsuario = {};
+
+function irParaObjetivo() {
+    const sexo = document.getElementById("dados-sexo").value;
+    const idade = parseInt(document.getElementById("dados-idade").value);
+    const altura = parseFloat(document.getElementById("dados-altura").value);
+    const peso = parseFloat(document.getElementById("dados-peso").value);
+    const erro = document.getElementById("dados-erro");
+
+    if (!idade || !altura || !peso) { erro.textContent = "Preencha idade, altura e peso."; return; }
+    erro.textContent = "";
+    dadosUsuario = { sexo, idade, altura, peso };
+    trocarTela("tela-objetivo");
+}
+
+function calcularCalorias(sexo, idade, alturaCm, pesoKg, objetivo) {
+    let tmb;
+    if (sexo === "masculino") tmb = (10 * pesoKg) + (6.25 * alturaCm) - (5 * idade) + 5;
+    else tmb = (10 * pesoKg) + (6.25 * alturaCm) - (5 * idade) - 161;
+
+    if (objetivo === "Emagrecimento") return tmb * 1.2 - 500;
+    if (objetivo === "Ganho de Massa") return tmb * 1.4 + 300;
+    return tmb * 1.3;
+}
+
+function calcular(objetivo) {
+    const usuario = usuarioAtual();
+    if (!usuario) { trocarTela("tela-login"); return; }
+
+    dadosUsuario.objetivo = objetivo;
+    const resultado = calcularCalorias(dadosUsuario.sexo, dadosUsuario.idade, dadosUsuario.altura, dadosUsuario.peso, objetivo);
+
+    const calculos = lerJSON("nutre.calculos", []);
+    calculos.push({ id: novoId(), usuarioId: usuario.id, ...dadosUsuario, resultado, criadoEm: new Date().toISOString() });
+    salvarJSON("nutre.calculos", calculos);
+
+    document.getElementById("resultado-numero").textContent = Math.round(resultado);
+    document.getElementById("resultado-legenda").textContent = `kcal por dia · ${objetivo}`;
+    trocarTela("tela-resultado");
+}
+
+function carregarHistorico() {
+    const usuario = usuarioAtual();
+    if (!usuario) { trocarTela("tela-login"); return; }
+
+    const calculos = lerJSON("nutre.calculos", [])
+        .filter(c => c.usuarioId === usuario.id)
+        .sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+
+    const lista = document.getElementById("historico-lista");
+    const vazio = document.getElementById("historico-vazio");
+    lista.innerHTML = "";
+
+    if (calculos.length > 0) {
+        vazio.style.display = "none";
+        calculos.forEach(c => {
+            const dataFormatada = new Date(c.criadoEm).toLocaleDateString("pt-BR");
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <span><div class="item-objetivo">${c.objetivo}</div><div class="item-data">${dataFormatada}</div></span>
+                <span class="item-kcal">${Math.round(c.resultado)} kcal</span>`;
+            lista.appendChild(li);
+        });
+    } else {
+        vazio.style.display = "block";
+    }
+    trocarTela("tela-historico");
+}
+
+/* ============================================================
+   Diet models
+   ============================================================ */
+function abrirDietas() {
+    trocarTela("tela-dietas");
+    const container = document.getElementById("lista-dietas");
+    container.innerHTML = "";
+
+    DIETAS.forEach(dieta => {
+        const cardapioHtml = dieta.cardapio.map(([refeicao, desc]) =>
+            `<div class="refeicao-item"><strong>${refeicao}:</strong> ${desc}</div>`).join("");
+
+        const tags = dieta.prot !== null
+            ? `<div class="tags-macro">
+                 <span class="tag-macro tag-prot">P ${dieta.prot}%</span>
+                 <span class="tag-macro tag-carbo">C ${dieta.carbo}%</span>
+                 <span class="tag-macro tag-gordura">G ${dieta.gordura}%</span>
+               </div>` : "";
+
+        const div = document.createElement("div");
+        div.className = "cartao-dieta";
+        div.innerHTML = `
+            <button class="cartao-dieta-cabecalho" onclick="this.parentElement.classList.toggle('aberto')">
+                <div>
+                    <div class="cartao-dieta-titulo">${dieta.nome}</div>
+                    <div class="cartao-dieta-perfil">${dieta.perfil}</div>
+                </div>
+                <svg class="seta" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="cartao-dieta-corpo">
+                <p>${dieta.descricao}</p>
+                ${tags}
+                <div class="cardapio-exemplo">${cardapioHtml}</div>
+            </div>`;
+        container.appendChild(div);
+    });
+}
+
+/* ============================================================
+   Foods & macros
+   ============================================================ */
+let categoriaAtual = "";
+
+function abrirAlimentos() {
+    trocarTela("tela-alimentos");
+    buscarAlimentos();
+}
+
+function filtrarCategoria(cat) {
+    categoriaAtual = cat;
+    document.querySelectorAll("#chips-categoria .chip").forEach(c => c.classList.remove("ativo"));
+    document.querySelector(`#chips-categoria [data-cat="${cat}"]`).classList.add("ativo");
+    buscarAlimentos();
+}
+
+function buscarAlimentos() {
+    document.getElementById("lista-online").innerHTML = "";
+    document.getElementById("status-online").textContent = "";
+    resultadosOnline = [];
+
+    const busca = document.getElementById("alimentos-busca").value.toLowerCase();
+    const filtrados = ALIMENTOS.filter(a =>
+        (!busca || a.nome.toLowerCase().includes(busca)) &&
+        (!categoriaAtual || a.categoria === categoriaAtual)
+    );
+
+    const container = document.getElementById("lista-alimentos");
+    container.innerHTML = "";
+    filtrados.forEach(a => {
+        const div = document.createElement("div");
+        div.className = "cartao-alimento";
+        div.innerHTML = `
+            <div class="cartao-alimento-info">
+                <div class="cartao-alimento-nome">${a.nome}</div>
+                <div class="cartao-alimento-macros">${a.kcal} kcal · P ${a.proteina}g · C ${a.carbo}g · G ${a.gordura}g <span>/100g</span></div>
+            </div>
+            <button class="btn-adicionar" onclick="adicionarAoPrato(${a.id})">+</button>`;
+        container.appendChild(div);
+    });
+}
+
+function adicionarAoPrato(alimentoId) {
+    const usuario = usuarioAtual();
+    if (!usuario) { trocarTela("tela-login"); return; }
+
+    const alimento = ALIMENTOS.find(a => a.id === alimentoId);
+    const quantidade = prompt(`Quantos gramas de "${alimento.nome}"?`, alimento.porcao);
+    if (!quantidade || isNaN(quantidade) || quantidade <= 0) return;
+
+    salvarNoDiario(usuario, {
+        nome: alimento.nome, fonte: "base própria",
+        kcal100g: alimento.kcal, proteina100g: alimento.proteina,
+        carbo100g: alimento.carbo, gordura100g: alimento.gordura
+    }, parseFloat(quantidade));
+
+    abrirDiario();
+}
+
+// Shared by both the local database and the Open Food Facts results:
+// every diary entry stores its own macro snapshot (per 100g), so it never
+// depends on looking anything up again later - it just works either way.
+function salvarNoDiario(usuario, alimentoInfo, quantidadeG) {
+    const hoje = new Date().toISOString().split("T")[0];
+    const diario = lerJSON("nutre.diario.v2", []);
+    diario.push({
+        id: novoId(), usuarioId: usuario.id, data: hoje, quantidadeG,
+        ...alimentoInfo
+    });
+    salvarJSON("nutre.diario.v2", diario);
+}
+
+/* ============================================================
+   "Meu Prato" diary
+   ============================================================ */
+function abrirDiario() {
+    const usuario = usuarioAtual();
+    if (!usuario) { trocarTela("tela-login"); return; }
+    trocarTela("tela-diario");
+
+    const hoje = new Date().toISOString().split("T")[0];
+    const itens = lerJSON("nutre.diario.v2", []).filter(d => d.usuarioId === usuario.id && d.data === hoje);
+
+    const totais = { kcal: 0, proteina: 0, carbo: 0, gordura: 0 };
+    const lista = document.getElementById("diario-lista");
+    const vazio = document.getElementById("diario-vazio");
+    lista.innerHTML = "";
+
+    itens.forEach(item => {
+        const fator = item.quantidadeG / 100;
+        const kcal = item.kcal100g * fator, prot = item.proteina100g * fator,
+              carbo = item.carbo100g * fator, gord = item.gordura100g * fator;
+        totais.kcal += kcal; totais.proteina += prot; totais.carbo += carbo; totais.gordura += gord;
+
+        const li = document.createElement("li");
+        li.innerHTML = `
+            <span><div class="item-objetivo">${item.nome}</div>
+                <div class="item-data">${item.quantidadeG}g · P ${prot.toFixed(1)}g C ${carbo.toFixed(1)}g G ${gord.toFixed(1)}g</div></span>
+            <span style="display:flex; align-items:center; gap:10px;">
+                <span class="item-kcal">${Math.round(kcal)} kcal</span>
+                <button class="btn-remover" onclick="removerDoPrato('${item.id}')">×</button>
+            </span>`;
+        lista.appendChild(li);
+    });
+
+    document.getElementById("total-kcal").textContent = Math.round(totais.kcal);
+    document.getElementById("total-prot").textContent = Math.round(totais.proteina) + "g";
+    document.getElementById("total-carbo").textContent = Math.round(totais.carbo) + "g";
+    document.getElementById("total-gordura").textContent = Math.round(totais.gordura) + "g";
+    vazio.style.display = itens.length > 0 ? "none" : "block";
+}
+
+function removerDoPrato(itemId) {
+    const diario = lerJSON("nutre.diario.v2", []).filter(d => d.id !== itemId);
+    salvarJSON("nutre.diario.v2", diario);
+    abrirDiario();
+}
+
+/* ============================================================
+   Open Food Facts — external food search. Free, no API key,
+   works straight from the browser. We keep it as an explicit
+   button (not search-as-you-type) to respect their rate limit
+   (10 requests/min per IP).
+   ============================================================ */
+let resultadosOnline = [];
+
+async function buscarOnline() {
+    const termo = document.getElementById("alimentos-busca").value.trim();
+    const status = document.getElementById("status-online");
+    const botao = document.getElementById("btn-buscar-online");
+    const container = document.getElementById("lista-online");
+
+    if (!termo) {
+        status.textContent = "Digite o nome de um alimento na busca acima primeiro.";
+        return;
+    }
+
+    botao.disabled = true;
+    status.textContent = "Buscando...";
+    container.innerHTML = "";
+
+    try {
+        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(termo)}&search_simple=1&action=process&json=1&page_size=15&fields=product_name,nutriments,brands`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error("Falha na resposta da API");
+        const dados = await resp.json();
+
+        // Keep only products that actually have calorie + macro data -
+        // Open Food Facts is crowdsourced, so a lot of entries are incomplete.
+        resultadosOnline = (dados.products || [])
+            .filter(p => p.product_name && p.nutriments && p.nutriments["energy-kcal_100g"] != null)
+            .map(p => ({
+                nome: p.brands ? `${p.product_name} (${p.brands})` : p.product_name,
+                kcal100g: p.nutriments["energy-kcal_100g"] || 0,
+                proteina100g: p.nutriments["proteins_100g"] || 0,
+                carbo100g: p.nutriments["carbohydrates_100g"] || 0,
+                gordura100g: p.nutriments["fat_100g"] || 0,
+            }))
+            .slice(0, 10);
+
+        if (resultadosOnline.length === 0) {
+            status.textContent = "Nada encontrado com dados nutricionais completos. Tenta outro termo.";
+        } else {
+            status.textContent = `${resultadosOnline.length} resultado(s) da Open Food Facts:`;
+            renderizarResultadosOnline();
+        }
+    } catch (e) {
+        status.textContent = "Não consegui buscar online agora (confira sua internet) — mas a base local continua funcionando normalmente.";
+        console.error(e);
+    } finally {
+        botao.disabled = false;
+    }
+}
+
+function renderizarResultadosOnline() {
+    const container = document.getElementById("lista-online");
+    container.innerHTML = "";
+    resultadosOnline.forEach((a, indice) => {
+        const div = document.createElement("div");
+        div.className = "cartao-alimento";
+        div.innerHTML = `
+            <div class="cartao-alimento-info">
+                <div class="cartao-alimento-nome">${a.nome}</div>
+                <div class="cartao-alimento-macros">${Math.round(a.kcal100g)} kcal · P ${a.proteina100g.toFixed(1)}g · C ${a.carbo100g.toFixed(1)}g · G ${a.gordura100g.toFixed(1)}g <span>/100g</span></div>
+                <div class="cartao-alimento-fonte">Open Food Facts</div>
+            </div>
+            <button class="btn-adicionar" onclick="adicionarOnlineAoPrato(${indice})">+</button>`;
+        container.appendChild(div);
+    });
+}
+
+function adicionarOnlineAoPrato(indice) {
+    const usuario = usuarioAtual();
+    if (!usuario) { trocarTela("tela-login"); return; }
+
+    const alimento = resultadosOnline[indice];
+    const quantidade = prompt(`Quantos gramas de "${alimento.nome}"?`, 100);
+    if (!quantidade || isNaN(quantidade) || quantidade <= 0) return;
+
+    salvarNoDiario(usuario, { ...alimento, fonte: "Open Food Facts" }, parseFloat(quantidade));
+    abrirDiario();
+}
+</script>
+</body>
+</html>
